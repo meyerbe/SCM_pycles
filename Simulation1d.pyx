@@ -68,9 +68,14 @@ class Simulation1d:
         self.M1.add_variable('v', 'm/s', "velocity")
         self.M1.add_variable('w', 'm/s', "velocity")
 
+        self.M2.add_variable('uu', '(m/s)^2', "velocity")
+        self.M2.add_variable('vv', '(m/s)^2', "velocity")
         self.M2.add_variable('wu', '(m/s)^2', "velocity")
         self.M2.add_variable('wv', '(m/s)^2', "velocity")
         self.M2.add_variable('ww', '(m/s)^2', "velocity")
+        self.M2.add_variable('pu', '(m/s)^2', "velocity")
+        self.M2.add_variable('pv', '(m/s)^2', "velocity")
+        self.M2.add_variable('pw', '(m/s)^2', "velocity")
 
 
         # AuxillaryVariables(namelist, self.PV, self.DV, self.Pa)
@@ -103,11 +108,10 @@ class Simulation1d:
             self.M1.plot('beginning of timestep', self.Gr, self.TS)
             # (1) update mean field (M1) tendencies
             # self.Th.update()
-            # self.MA.update(self.Gr, self.Ref, self.M1)      # --> self.MA.update_M1_2nd()
-            # self.SA.update(self.Gr, self.Ref, self.M1)      # --> self.SA.update_M1_2nd()
+            self.MA.update_M1_2nd(self.Gr, self.Ref, self.M1)       # self.MA.update(self.Gr, self.Ref, self.M1)
+            self.SA.update_M1_2nd(self.Gr, self.Ref, self.M1)       # self.SA.update(self.Gr, self.Ref, self.M1)
 
             self.MD.update(self.Gr, self.Ref, self.M1, self.SGS)
-            # self.M1.plot('after MD update', self.Gr, self.TS)
             self.SD.update(self.Gr, self.Ref, self.M1, self.SGS)
             # self.M1.plot('after SD update', self.Gr, self.TS)
 
@@ -116,9 +120,7 @@ class Simulation1d:
             # ??? update boundary conditions ???
             # ??? pressure solver ???
 
-            # self.PV.update(self.Gr, self.TS) # !!! causes error !!!
             self.M1.plot('without tendency update', self.Gr, self.TS)
-            self.M1.update(self.Gr, self.TS)        # --> updating values by adding tendencies
 
 
             # (2) update second order momenta (M2) tendencies
@@ -129,12 +131,14 @@ class Simulation1d:
             # self.Turb.update_M2()                 # update higher order terms in M2 tendencies
             print('Sim: Turb update')
             self.Turb.update(self.Gr, self.M1, self.M2)
+                # Turb.advect_M2_local(Gr, M1, M2)
             # ??? update boundary conditions???
             # ??? pressure correlations ???
             # ??? surface fluxes ??? (--> in SGS or MD/SD scheme?)
+
+
+            self.M1.update(self.Gr, self.TS)        # --> updating values by adding tendencies
             self.M2.update(self.Gr, self.TS)        # --> updating values by adding tendencies
-
-
             self.TS.update()
 
         return
